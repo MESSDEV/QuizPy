@@ -1,4 +1,6 @@
 import sqlite3
+from random import randint
+ 
 db_name = 'quiz.sqlite'
 conn = None
 cursor = None
@@ -17,7 +19,7 @@ def do(query):
     conn.commit()
  
 def clear_db():
-    ''' deletes all tables '''
+    '''kills all tables'''
     open()
     query = '''DROP TABLE IF EXISTS quiz_content'''
     do(query)
@@ -26,30 +28,43 @@ def clear_db():
     query = '''DROP TABLE IF EXISTS quiz'''
     do(query)
     close()
-    
+ 
 def create():
     open()
     cursor.execute('''PRAGMA foreign_keys=on''')
- 
+    
     do('''CREATE TABLE IF NOT EXISTS quiz (
-           id INTEGER PRIMARY KEY,
-           name VARCHAR)''')
- 
+            id INTEGER PRIMARY KEY, 
+            name VARCHAR)''' 
+    )
     do('''CREATE TABLE IF NOT EXISTS question (
-               id INTEGER PRIMARY KEY,
-               question VARCHAR,
-               answer VARCHAR,
-               wrong1 VARCHAR,
-               wrong2 VARCHAR,
-               wrong3 VARCHAR)''')
- 
+                id INTEGER PRIMARY KEY, 
+                question VARCHAR, 
+                answer VARCHAR, 
+                wrong1 VARCHAR, 
+                wrong2 VARCHAR, 
+                wrong3 VARCHAR)'''
+    )
     do('''CREATE TABLE IF NOT EXISTS quiz_content (
-               id INTEGER PRIMARY KEY,
-               quiz_id INTEGER,
-               question_id INTEGER,
-               FOREIGN KEY (quiz_id) REFERENCES quiz (id),
-               FOREIGN KEY (question_id) REFERENCES question (id) )''')
+                id INTEGER PRIMARY KEY,
+                quiz_id INTEGER,
+                question_id INTEGER,
+                FOREIGN KEY (quiz_id) REFERENCES quiz (id),
+                FOREIGN KEY (question_id) REFERENCES question (id) )'''
+    )
     close()
+ 
+def show(table):
+    query = 'SELECT * FROM ' + table
+    open()
+    cursor.execute(query)
+    print(cursor.fetchall())
+    close()
+ 
+def show_tables():
+    show('question')
+    show('quiz')
+    show('quiz_content')
  
 def add_questions():
     questions = [
@@ -57,7 +72,7 @@ def add_questions():
         ('What will the green cliff look like if it falls into the Red Sea?', 'Wet', 'Red', 'Will not change', 'Purple'),
         ('Which hand is better to stir tea with?', 'With a spoon', 'Right', 'Left', 'Any'),
         ('What has no length, depth, width, or height, but can be measured?', 'Time', 'Stupidity', 'The sea','Air'),
-        ('When is it possible to draw out water with a net?', 'When the water is frozen', 'When there are no fish', 'When the goldfish swim away', 'When the ne breaks'),
+        ('When is it possible to draw out water with a net?', 'When the water is frozen', 'When there are no fish', 'When the goldfish swim away', 'When the net breaks'),
         ('What is bigger than an elephant and weighs nothing?', 'Shadow of elephant','A balloon','A parachute', 'A cloud')
     ]
     open()
@@ -67,9 +82,9 @@ def add_questions():
  
 def add_quiz():
     quizes = [
-        ('Own game', ),
-        ('Who wants to be a millionaire?', ),
-        ('The smartest', )
+        ('Quiz 1', ),
+        ('Quiz 2', ),
+        ('Quiz- do not understand which', )
     ]
     open()
     cursor.executemany('''INSERT INTO quiz (name) VALUES (?)''', quizes)
@@ -89,42 +104,62 @@ def add_links():
         answer = input("Add a link (y/n)?")
     close()
  
-def show(table):
-    query = 'SELECT * FROM ' + table
-    open()
-    cursor.execute(query)
-    print(cursor.fetchall())
-    close()
  
-def show_tables():
-    show('question')
-    show('quiz')
-    show('quiz_content')
- 
-def get_question_after(question_id = 0, quiz_id=1):
-    ''' returns the next question after the question with the passed ID
+def get_question_after(last_id=0, vict_id=1):
+    '''returns the next question after the question with the passed ID
     for the first question, the default value is passed'''
     open()
     query = '''
     SELECT quiz_content.id, question.question, question.answer, question.wrong1, question.wrong2, question.wrong3
-    FROM question, quiz_content
+    FROM question, quiz_content 
     WHERE quiz_content.question_id == question.id
-    AND quiz_content.id > ? AND quiz_content.quiz_id == ?
+    AND quiz_content.id > ? AND quiz_content.quiz_id == ? 
     ORDER BY quiz_content.id '''
-    cursor.execute(query, [question_id, quiz_id] )
+    cursor.execute(query, [last_id, vict_id] )
+ 
+    result = cursor.fetchone()
+    close()
+    return result 
+ 
+def get_quises():
+    '''returns a list of quizzes (id, name) 
+    you can only take quizzes in which there are questions, but so far a simple option'''
+    query = 'SELECT * FROM quiz ORDER BY id'
+    open()
+    cursor.execute(query)
+    result = cursor.fetchall()
+    close()
+    return result
+def get_quiz_count():
+    "' optional function '"
+    query = 'SELECT MAX(quiz_id) FROM quiz_content'
+    open()
+    cursor.execute(query)
     result = cursor.fetchone()
     close()
     return result
- 
+def get_random_quiz_id():
+    query = 'SELECT quiz_id FROM quiz_content'
+    open()
+    cursor.execute(query)
+    ids = cursor.fetchall()
+    rand_num = randint(0, len(ids) - 1)
+    rand_id = ids[rand_num][0]
+    close()
+    return rand_id
 def main():
     clear_db()
     create()
     add_questions()
     add_quiz()
+    show_tables()
     add_links()
     show_tables()
-    # Output to the console of a question with id=3, quiz id = 1
-    print(get_question_after(3, 1))
- 
+    # print(get_question_after(0, 3))
+    # print(get_quiz_count())
+    # print(get_random_quiz_id())
+    pass
+
+
 if __name__ == "__main__":
     main()
