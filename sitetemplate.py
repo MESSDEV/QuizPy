@@ -3,9 +3,15 @@ When requesting this server, it returns the contents of the index.html file
 In this version, it is assumed that there may be a template in the file. """
 from flask import Flask, render_template
 import os
+
+
+#list of contestants 
+p_list = [('John','London'), ('Jack','London'), ('Jessica','New York'), ('Nicholas','Paris'),('Jim','London'),('Simon','Berlin')]
+
+
 def index():
     """ the function handles the template index.html and returns the resulting document"""
-    return render_template('index.html')
+    return render_template('index.html ', p_list = p_list , city= "London")
 
 
 folder = os.getcwd()  # remembering the current working folder
